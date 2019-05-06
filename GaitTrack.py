@@ -15,7 +15,7 @@ ap.add_argument("-b", "--buffer", type=int, default=64,
                 help="max buffer size")
 args = vars(ap.parse_args())
 
-# define the lower and upper boundaries of the "green"
+# define the  lower and upper boundaries of the "green"
 # ball in the HSV color space, then initialize the
 # list of tracked points
 yellowLower = (29, 86, 6)
