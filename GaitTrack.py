@@ -25,8 +25,8 @@ redLower = (118, 80, 96)
 redUpper = (205, 201, 234)
 yellow_pts = deque(maxlen=args["buffer"])
 red_pts = deque(maxlen=args["buffer"])
-red_data = np.array([])
-yellow_data = np.array([])
+red_data = np.array([[], []])
+yellow_data = np.array([[], []])
 
 # if a video path was not supplied, grab the reference
 # to the webcam
@@ -102,7 +102,7 @@ while True:
     red_cnts = imutils.grab_contours(red_cnts)
     red_center = None
 
-    yellow_data = np.append(yellow_data, [int(M["m10"] / M["m00"])])
+    yellow_data = [np.append(yellow_data[0], [int(M["m10"] / M["m00"])]), np.append(yellow_data[1], [int(M["m01"] / M["m00"])])]
 
     # only proceed if at least one contour was found
     if len(red_cnts) > 0:
@@ -126,7 +126,8 @@ while True:
     # update the points queue
     yellow_pts.appendleft(yellow_center)
     red_pts.appendleft(red_center)
-    red_data = np.append(red_data, [int(M["m10"] / M["m00"])])
+    red_data = [np.append(red_data[0], [int(M["m10"] / M["m00"])]), np.append(red_data[1], [int(M["m01"] / M["m00"])])]
+
 
     # loop over the set of tracked points
     for i in range(1, len(yellow_pts)):
@@ -170,19 +171,40 @@ else:
 # close all windows
 cv2.destroyAllWindows()
 
-fig, ax = plt.subplots(2,1)
-t_red = np.arange(0, len(red_data), 1)
-t_yellow = np.arange(0, len(yellow_data), 1)
+fig, ax = plt.subplots(2, 2)
+t_red_x = np.arange(0, len(red_data[0]), 1)
+t_yellow_x = np.arange(0, len(yellow_data[0]), 1)
+t_red_y = np.arange(0, len(red_data[1]), 1)
+t_yellow_y = np.arange(0, len(yellow_data[1]), 1)
 
 
-ax[0].set(xlabel='frame', ylabel='x position of red dot',
-       title='Red Marker Position')
+ax[0][0].set(xlabel='frame', ylabel='x position',
+       title='Red Marker X Position')
 
-ax[1].set(xlabel='frame', ylabel='x position of yellow dot',
-       title='Yellow Marker Position')
+ax[1, 0].set(xlabel='frame', ylabel='x position',
+       title='Yellow Marker X Position')
 
-ax[0].grid()
-ax[1].grid()
-ax[0].plot(t_red, red_data)
-ax[1].plot(t_yellow, yellow_data)
+
+ax[0][1].set(xlabel='frame', ylabel='y position',
+       title='Red Marker Y Position')
+
+ax[1, 1].set(xlabel='frame', ylabel='y position',
+       title='Yellow Marker Y Position')
+
+ax[0, 0].grid()
+ax[0, 1].grid()
+ax[1, 0].grid()
+ax[1, 1].grid()
+
+ax[0, 0].plot(t_red_x, red_data[0])
+ax[1, 0].plot(t_yellow_x, yellow_data[0])
+ax[0, 1].plot(t_red_y, red_data[1])
+ax[1, 1].plot(t_yellow_y, yellow_data[1])
+
+
 plt.show()
+
+
+#fig_delta, ax_delta = plt.subplots(2, 1)
+
+
