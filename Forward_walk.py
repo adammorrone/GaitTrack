@@ -20,13 +20,16 @@ args = vars(ap.parse_args())
 # ball in the HSV color space, then initialize the
 # ball in the HSV color space, then initialize the
 # list of tracked points
-yellowLower = (28, 48, 85)
-yellowUpper = (62, 182, 255)
-redLower = (118, 80, 96)
-redUpper = (205, 201, 234)
+#yellowLower = (28, 48, 85)
+#yellowUpper = (62, 182, 255)
+
+yellowLower = (24, 53, 69)
+yellowUpper = (60, 255, 255)
+blueLower = (88, 128, 94)
+blueUpper = (117, 255, 255)
 yellow_pts = deque()
-red_pts = deque()
-red_data = np.array([[], []])
+blue_pts = deque()
+blue_data = np.array([[], []])
 yellow_data = np.array([[], []])
 
 # if a video path was not supplied, grab the reference
@@ -58,20 +61,20 @@ while True:
     # color space
     frame = imutils.resize(frame, width=1400)
 
-    blurred = cv2.GaussianBlur(frame, (11, 11), 0)
-    hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
+    blurblue = cv2.GaussianBlur(frame, (11, 11), 0)
+    hsv = cv2.cvtColor(blurblue, cv2.COLOR_BGR2HSV)
 
     # construct a mask for the color "green", then perform
     # a series of dilations and erosions to remove any small
     # blobs left in the mask
     yellow_mask = cv2.inRange(hsv, yellowLower, yellowUpper)
-    red_mask = cv2.inRange(hsv, redLower, redUpper)
+    blue_mask = cv2.inRange(hsv, blueLower, blueUpper)
 
     yellow_mask = cv2.erode(yellow_mask, None, iterations=2)
     yellow_mask = cv2.dilate(yellow_mask, None, iterations=2)
 
-    red_mask = cv2.erode(red_mask, None, iterations=2)
-    red_mask = cv2.dilate(red_mask, None, iterations=2)
+    blue_mask = cv2.erode(blue_mask, None, iterations=2)
+    blue_mask = cv2.dilate(blue_mask, None, iterations=2)
 
     # find contours in the mask and initialize the current
     # (x, y) center of the ball
@@ -98,22 +101,22 @@ while True:
                        (255, 0, 0), 2)
             cv2.circle(frame, yellow_center, 5, (0, 0, 255), -1)
 
-    red_cnts = cv2.findContours(red_mask.copy(), cv2.RETR_EXTERNAL,
+    blue_cnts = cv2.findContours(blue_mask.copy(), cv2.RETR_EXTERNAL,
                                    cv2.CHAIN_APPROX_SIMPLE)
-    red_cnts = imutils.grab_contours(red_cnts)
-    red_center = None
+    blue_cnts = imutils.grab_contours(blue_cnts)
+    blue_center = None
 
     yellow_data = [np.append(yellow_data[0], [int(M["m10"] / M["m00"])]), np.append(yellow_data[1], [int(M["m01"] / M["m00"])])]
 
     # only proceed if at least one contour was found
-    if len(red_cnts) > 0:
+    if len(blue_cnts) > 0:
         # find the largest contour in the mask, then use
         # it to compute the minimum enclosing circle and
         # centroid
-        c = max(red_cnts, key=cv2.contourArea)
+        c = max(blue_cnts, key=cv2.contourArea)
         ((x, y), radius) = cv2.minEnclosingCircle(c)
         M = cv2.moments(c)
-        red_center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+        blue_center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
         # only proceed if the radius meets a minimum size
         if radius > 8:
@@ -121,13 +124,13 @@ while True:
             # then update the list of tracked points
             cv2.circle(frame, (int(x), int(y)), int(radius),
                        (255, 0, 0), 2)
-            cv2.circle(frame, red_center, 5, (0, 0, 255), -1)
+            cv2.circle(frame, blue_center, 5, (0, 0, 255), -1)
 
 
     # update the points queue
     yellow_pts.appendleft(yellow_center)
-    red_pts.appendleft(red_center)
-    red_data = [np.append(red_data[0], [int(M["m10"] / M["m00"])]), np.append(red_data[1], [int(M["m01"] / M["m00"])])]
+    blue_pts.appendleft(blue_center)
+    blue_data = [np.append(blue_data[0], [int(M["m10"] / M["m00"])]), np.append(blue_data[1], [int(M["m01"] / M["m00"])])]
 
 
     # loop over the set of tracked points
@@ -142,16 +145,16 @@ while True:
         thickness = int(np.sqrt(args["buffer"] / float(i + 1)) * 3)
         cv2.line(frame, yellow_pts[i - 1], yellow_pts[i], (4, 236, 255), thickness)
 
-    for i in range(1, len(red_pts)):
+    for i in range(1, len(blue_pts)):
         # if either of the tracked points are None, ignore
         # them
-        if red_pts[i - 1] is None or red_pts[i] is None:
+        if blue_pts[i - 1] is None or blue_pts[i] is None:
             continue
 
         # otherwise, compute the thickness of the line and
         # draw the connecting lines
-        thickness = int(np.sqrt(args["buffer"] / float(i + 1)) * 2)
-        cv2.line(frame, red_pts[i - 1], red_pts[i], (0, 0, 255), thickness)
+        thickness = int(np.sqrt(args["buffer"] / float(i + 1)) * 3)
+        cv2.line(frame, blue_pts[i - 1], blue_pts[i], (255, 150, 50), thickness)
 
     # show the frame to our screen
     cv2.imshow("Frame", frame)
@@ -173,21 +176,21 @@ else:
 #cv2.destroyAllWindows()
 
 fig, ax = plt.subplots(2, 2)
-t_red_x = np.arange(0, len(red_data[0][12:]), 1)
+t_blue_x = np.arange(0, len(blue_data[0][12:]), 1)
 t_yellow_x = np.arange(0, len(yellow_data[0][12:]), 1)
-t_red_y = np.arange(0, len(red_data[1][12:]), 1)
+t_blue_y = np.arange(0, len(blue_data[1][12:]), 1)
 t_yellow_y = np.arange(0, len(yellow_data[1][12:]), 1)
 
 
 ax[0][0].set(xlabel='frame', ylabel='x position',
-       title='Red Marker X Position')
+       title='blue Marker X Position')
 
 ax[1, 0].set(xlabel='frame', ylabel='x position',
        title='Yellow Marker X Position')
 
 
 ax[0][1].set(xlabel='frame', ylabel='y position',
-       title='Red Marker Y Position')
+       title='blue Marker Y Position')
 
 ax[1, 1].set(xlabel='frame', ylabel='y position',
        title='Yellow Marker Y Position')
@@ -197,9 +200,9 @@ ax[0, 1].grid()
 ax[1, 0].grid()
 ax[1, 1].grid()
 
-ax[0, 0].plot(t_red_x, red_data[0][12:])
+ax[0, 0].plot(t_blue_x, blue_data[0][12:])
 ax[1, 0].plot(t_yellow_x, yellow_data[0][12:])
-ax[0, 1].plot(t_red_y, red_data[1][12:])
+ax[0, 1].plot(t_blue_y, blue_data[1][12:])
 ax[1, 1].plot(t_yellow_y, yellow_data[1][12:])
 
 
@@ -209,8 +212,8 @@ fig_delta, ax_delta = plt.subplots(1, 2)
 ax_delta[0].grid()
 ax_delta[1].grid()
 
-ax_delta[0].plot(t_red_x, red_data[0][12:]-yellow_data[0][12:])
-ax_delta[1].plot(t_yellow_x, red_data[1][12:]-yellow_data[1][12:])
+ax_delta[0].plot(t_blue_x, blue_data[0][12:]-yellow_data[0][12:])
+ax_delta[1].plot(t_yellow_x, blue_data[1][12:]-yellow_data[1][12:])
 
 ax_delta[0].set(xlabel='frame', ylabel='delta x',
        title='Delta X Position Between Markers')
