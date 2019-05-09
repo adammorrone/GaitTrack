@@ -23,8 +23,8 @@ yellowLower = (28, 48, 85)
 yellowUpper = (62, 182, 255)
 redLower = (118, 80, 96)
 redUpper = (205, 201, 234)
-yellow_pts = deque(maxlen=args["buffer"])
-red_pts = deque(maxlen=args["buffer"])
+yellow_pts = deque()
+red_pts = deque()
 red_data = np.array([[], []])
 yellow_data = np.array([[], []])
 
@@ -55,7 +55,7 @@ while True:
 
     # resize the frame, blur it, and convert it to the HSV
     # color space
-    frame = imutils.resize(frame, width=1400)
+    #frame = imutils.resize(frame, width=1400)
 
     blurred = cv2.GaussianBlur(frame, (11, 11), 0)
     hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
@@ -169,13 +169,13 @@ else:
     vs.release()
 
 # close all windows
-cv2.destroyAllWindows()
+#cv2.destroyAllWindows()
 
 fig, ax = plt.subplots(2, 2)
-t_red_x = np.arange(0, len(red_data[0]), 1)
-t_yellow_x = np.arange(0, len(yellow_data[0]), 1)
-t_red_y = np.arange(0, len(red_data[1]), 1)
-t_yellow_y = np.arange(0, len(yellow_data[1]), 1)
+t_red_x = np.arange(0, len(red_data[0][12:]), 1)
+t_yellow_x = np.arange(0, len(yellow_data[0][12:]), 1)
+t_red_y = np.arange(0, len(red_data[1][12:]), 1)
+t_yellow_y = np.arange(0, len(yellow_data[1][12:]), 1)
 
 
 ax[0][0].set(xlabel='frame', ylabel='x position',
@@ -196,15 +196,26 @@ ax[0, 1].grid()
 ax[1, 0].grid()
 ax[1, 1].grid()
 
-ax[0, 0].plot(t_red_x, red_data[0])
-ax[1, 0].plot(t_yellow_x, yellow_data[0])
-ax[0, 1].plot(t_red_y, red_data[1])
-ax[1, 1].plot(t_yellow_y, yellow_data[1])
+ax[0, 0].plot(t_red_x, red_data[0][12:])
+ax[1, 0].plot(t_yellow_x, yellow_data[0][12:])
+ax[0, 1].plot(t_red_y, red_data[1][12:])
+ax[1, 1].plot(t_yellow_y, yellow_data[1][12:])
 
+
+
+fig_delta, ax_delta = plt.subplots(1, 2)
+
+ax_delta[0].grid()
+ax_delta[1].grid()
+
+ax_delta[0].plot(t_red_x, red_data[0][12:]-yellow_data[0][12:])
+ax_delta[1].plot(t_yellow_x, red_data[1][12:]-yellow_data[1][12:])
+
+ax_delta[0].set(xlabel='frame', ylabel='delta x',
+       title='Delta X Position Between Markers')
+
+ax_delta[1].set(xlabel='frame', ylabel='delta y',
+       title='Delta Y Position Between Markers')
 
 plt.show()
-
-
-#fig_delta, ax_delta = plt.subplots(2, 1)
-
 
