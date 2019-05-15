@@ -128,6 +128,7 @@ while True:
 
     green_data = [np.append(green_data[0], [int(M["m10"] / M["m00"])]),
                   np.append(green_data[1], [int(M["m01"] / M["m00"])])]
+    print(green_data)
 
 
     if len(green_cnts) > 1:

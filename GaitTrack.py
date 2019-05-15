@@ -1,11 +1,7 @@
 # import the necessary packages
-from collections import deque
-from imutils.video import VideoStream
-import numpy as np
-import argparse
+
 import cv2
 import imutils
-import time
 import matplotlib.pyplot as plt
 from dataclasses import dataclass
 
@@ -29,15 +25,22 @@ class Color:
     lower_bound_HSV: tuple
     upper_bound_HSV: tuple
     num_objects: int = 1
-    x_pos: object = np.array([[], []])
-    y_pos: object = np.array([[], []])
+    x_pos: list = None
+    y_pos: list = None
 
 
 # list of Color objects to look for
-
 setup = [Color("G", (54, 36, 68), (90, 180, 161), 2),
          Color("R", (118, 80, 96), (205, 201, 234), 1),
-         Color("Y", (24, 65, 110), (44, 137, 255), 1)]
+         Color("Y", (24, 65, 110), (44, 137, 255), 1),
+         Color("B", (110, 20, 0), (255, 255, 131), 1)]
+
+total_objects = 0
+for color in setup:
+    color.x_pos = [[None]] * color.num_objects
+    color.y_pos = [[None]] * color.num_objects
+    total_objects = total_objects + color.num_objects
+
 
 vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\robo_footage\two_green.mp4')
 
@@ -88,39 +91,41 @@ while True:
 
             cnts.sort(key=lambda y_pos: cv2.moments(y_pos)['m01']/cv2.moments(y_pos)['m00'])
 
-            index = 0
-            for cnt in cnts:
-                ((x, y), radius) = cv2.minEnclosingCircle(cnt)
-                M = cv2.moments(cnt)
+            for i in range(len(cnts)):
+                ((x, y), radius) = cv2.minEnclosingCircle(cnts[i])
+                M = cv2.moments(cnts[i])
                 # draw the circle and centroid on the frame,
                 # then update the list of tracked points
                 cv2.circle(frame, (int(x), int(y)), int(radius),
                            (255, 0, 0), 2)
-                cv2.putText(frame, color.label + str(index + 1), (int(x), int(y - radius)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
+                cv2.putText(frame, color.label + str(i + 1), (int(x), int(y - radius)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
 
-                color.x_pos[index] = np.append(color.x_pos[index], [int(M["m10"] / M["m00"])])
-                color.y_pos[index] = np.append(color.y_pos[index], [int(M["m01"] / M["m00"])])
+                color.x_pos[i].append(int(M["m10"] / M["m00"]))
+                color.y_pos[i].append(int(M["m01"] / M["m00"]))
+                print(color.x_pos[0])
+                print('\n')
 
-                index = index + 1
+                # loop over the set of tracked points
 
-    # # loop over the set of tracked points
-    # for i in range(1, len(pts)):
-    #     # if either of the tracked points are None, ignore
-    #     # them
-    #     if pts[i - 1] is None or pts[i] is None:
-    #         continue
-    #
-    #     # otherwise, compute the thickness of the line and
-    #     # draw the connecting lines
-    #     cv2.line(frame, pts[i - 1], pts[i], (4, 236, 255), thickness)
-    #
+    for color in setup:
+        for obj in range(color.num_objects):
+            for i in range(len(color.x_pos[obj])):
+                # if either of the tracked points are None, ignore them
 
+                if color.x_pos[obj][i - 1] is None or color.x_pos[obj][i] is None:
+                    continue
+
+                # otherwise, compute the thickness of the line and
+                # draw the connecting lines
+                cv2.line(frame, (color.x_pos[obj][i - 1], color.y_pos[obj][i - 1]),
+                         (color.x_pos[obj][i], color.y_pos[obj][i]), (4, 236, 255), 1)
 
     # show the frame to our screen
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF
 
     # if the 'q' key is pressed, stop the loop
+
     if key == ord("q"):
         break
 
