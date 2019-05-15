@@ -100,10 +100,13 @@ while True:
                            (255, 0, 0), 2)
                 cv2.putText(frame, color.label + str(i + 1), (int(x), int(y - radius)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
 
-                color.x_pos[i].append(int(M["m10"] / M["m00"]))
-                color.y_pos[i].append(int(M["m01"] / M["m00"]))
-                print(color.x_pos[0])
-                print('\n')
+                tempx = color.x_pos[i].copy()
+                tempy = color.y_pos[i].copy()
+                tempx.append(int(M["m10"] / M["m00"]))
+                tempy.append(int(M["m01"] / M["m00"]))
+                color.x_pos[i] = tempx.copy()
+                color.y_pos[i] = tempy.copy()
+
 
                 # loop over the set of tracked points
 
