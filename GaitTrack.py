@@ -5,6 +5,7 @@ import imutils
 import matplotlib.pyplot as plt
 from dataclasses import dataclass
 
+
 # construct the argument parse and parse the arguments
 # ap = argparse.ArgumentParser()
 # ap.add_argument("-v", "--video",
@@ -104,8 +105,10 @@ while True:
                 tempy = color.y_pos[i].copy()
                 tempx.append(int(M["m10"] / M["m00"]))
                 tempy.append(int(M["m01"] / M["m00"]))
+
                 color.x_pos[i] = tempx.copy()
                 color.y_pos[i] = tempy.copy()
+
 
 
                 # loop over the set of tracked points
