@@ -85,12 +85,13 @@ while True:
 
     cv2.imshow("Frame", green_mask)
 
-    green_mask = cv2.dilate(green_mask, None, iterations=5)
+    green_mask = cv2.dilate(green_mask, None, iterations=6)
+    green_mask = cv2.erode(green_mask, None, iterations=4)
 
     cv2.imshow("Frame", green_mask)
 
     red_mask = cv2.erode(red_mask, None, iterations=2)
-    red_mask = cv2.dilate(red_mask, None, iterations=2)
+    red_mask = cv2.dilate(red_mask, None, iterations=4)
 
 
     # find contours in the mask and initialize the current
@@ -104,6 +105,9 @@ while True:
 
     green_center = None
 
+    if len(green_cnts) != 2:
+        a = 1
+
     # only proceed if at least one contour was found
     if len(green_cnts) > 0:
         # find the largest contour in the mask, then use
@@ -115,11 +119,12 @@ while True:
         green_center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
         # only proceed if the radius meets a minimum size
-        if radius > 8:
+        if radius > 5:
             # draw the circle and centroid on the frame,
             # then update the list of tracked points
             cv2.circle(frame, (int(x), int(y)), int(radius),
                        (255, 0, 0), 2)
+            cv2.putText(frame, '1', (int(x), int(y - radius)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
 
     green_data = [np.append(green_data[0], [int(M["m10"] / M["m00"])]),
                   np.append(green_data[1], [int(M["m01"] / M["m00"])])]
@@ -135,11 +140,12 @@ while True:
         green_center2 = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
         # only proceed if the radius meets a minimum size
-        if radius > 8:
+        if radius > 5:
             # draw the circle and centroid on the frame,
             # then update the list of tracked points
             cv2.circle(frame, (int(x), int(y)), int(radius),
                        (255, 0, 0), 2)
+        cv2.putText(frame, '2', (int(x), int(y - radius)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
 
     green_data2 = [np.append(green_data2[0], [int(M["m10"] / M["m00"])]),
                   np.append(green_data2[1], [int(M["m01"] / M["m00"])])]
@@ -160,11 +166,13 @@ while True:
         red_center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
         # only proceed if the radius meets a minimum size
-        if radius > 8:
+        if radius > 5:
             # draw the circle and centroid on the frame,
             # then update the list of tracked points
             cv2.circle(frame, (int(x), int(y)), int(radius),
                        (255, 0, 0), 2)
+
+            cv2.putText(frame, '3', (int(x), int(y - radius)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
 
     red_data = [np.append(red_data[0], [int(M["m10"] / M["m00"])]), np.append(red_data[1], [int(M["m01"] / M["m00"])])]
 
