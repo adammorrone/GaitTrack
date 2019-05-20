@@ -4,6 +4,7 @@ import cv2
 import imutils
 import matplotlib.pyplot as plt
 from dataclasses import dataclass
+import math
 
 
 # construct the argument parse and parse the arguments
@@ -28,6 +29,30 @@ class Color:
     num_objects: int = 1
     x_pos: list = None
     y_pos: list = None
+
+
+# datatype should be two colors and the object number of intersst
+# calcs sloep from two markers
+# pnt1 should be higher than pnt2
+def slope(color1, ID1, color2, ID2):
+    rise = color1.y_pos[ID1][-1] - color2.y_pos[ID2][-1]
+    run = color1.x_pos[ID1][-1] - color2.x_pos[ID2][-1]
+    return rise/run
+
+
+# calcs angle between two lines (4 markers)
+# datatype should be for markers via color and object_ID in descending y value
+def angle(ln1_color1, ID1_1, ln1_color2, ID1_2, ln2_color1, ID2_1, ln2_color2, ID2_2):
+    ln1_rise = ln1_color1.y_pos[ID1_1][-1] - ln1_color2.y_pos[ID1_2][-1]
+    ln1_run = ln1_color1.x_pos[ID1_1][-1] - ln1_color2.x_pos[ID1_2][-1]
+
+    ln2_rise = ln2_color1.y_pos[ID2_1][-1] - ln2_color2.y_pos[ID2_2][-1]
+    ln2_run = ln2_color1.x_pos[ID2_1][-1] - ln2_color2.x_pos[ID2_2][-1]
+
+    ln1_angle = abs(math.atan(ln1_rise/ln1_run))
+    ln2_angle = abs(math.atan(ln2_rise/ln2_run))
+
+    return ln1_angle/ln2_angle
 
 
 # list of Color objects to look for
@@ -141,6 +166,7 @@ while True:
 #
 # # otherwise, release the camera
 # else:
+
 vs.release()
 
 # close all windows
