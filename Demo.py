@@ -1,13 +1,12 @@
-# import the necessary packages
-from collections import deque
-from imutils.video import VideoStream
-import numpy as np
-import argparse
+# -- coding: cp1252 --
+
 import cv2
 import imutils
-import time
 import matplotlib.pyplot as plt
 from dataclasses import dataclass
+import math
+
+
 
 # construct the argument parse and parse the arguments
 # ap = argparse.ArgumentParser()
@@ -33,20 +32,77 @@ class Color:
     y_pos: list = None
 
 
+# datatype should be two colors and the object number of intersst
+# calcs sloep from two markers
+# pnt1 should be higher than pnt2
+def slope(color1, id1, color2, id2):
+    rise = color1.y_pos[id1][-1] - color2.y_pos[id2][-1]
+    run = color1.x_pos[id1][-1] - color2.x_pos[id2][-1]
+    return rise/run
+
+
+# calcs angle between two lines (4 markers)
+# datatype should be for markers via color and object_id in descending y value
+def angle(ln1_color1, id1_1, ln1_color2, id1_2, ln2_color1, id2_1, ln2_color2, id2_2):
+    x1 = ln1_color1.x_pos[id1_1][-1]
+    x2 = ln1_color2.x_pos[id1_2][-1]
+    x3 = ln2_color1.x_pos[id2_1][-1]
+    x4 = ln2_color2.x_pos[id2_2][-1]
+
+    y1 = ln1_color1.y_pos[id1_1][-1]
+    y2 = ln1_color2.y_pos[id1_2][-1]
+    y3 = ln2_color1.y_pos[id2_1][-1]
+    y4 = ln2_color2.y_pos[id2_2][-1]
+
+    v1 = (x1 - x2, y1 - y2)
+    v2 = (x3 - x4, y3 - y4)
+
+    theta = math.acos((v1[0]*v2[0] + v1[1]*v2[1]) / ((math.hypot(x1 - x2, y1 - y2)) * math.hypot(x3 - x4, y3 - y4)))
+
+    return math.degrees(theta)
+
+
+def drawline(color1, id1, color2, id2):
+    x1 = color1.x_pos[id1][-1]
+    x2 = color2.x_pos[id2][-1]
+    y1 = color1.y_pos[id1][-1]
+    y2 = color2.y_pos[id2][-1]
+
+    rise = y1 - y2
+    run = x1 - x2
+
+    x1 = int(x1 + run*1.5)
+    x2 = int(x2 - run*1.5)
+    y1 = int(y1 + rise*1.5)
+    y2 = int(y2 - rise*1.5)
+
+    cv2.line(frame, (x1, y1), (x2, y2), (255, 255, 255), 2)
+
+
 # list of Color objects to look for
-setup = [Color("G", (54, 36, 68), (90, 180, 161), 2),
-         Color("R", (118, 80, 96), (205, 201, 234), 1),
-         Color("Y", (24, 65, 110), (44, 137, 255), 1),
-         Color("B", (110, 20, 0), (255, 255, 131), 1)]
+colors = [Color("R", (0, 110, 0), (15, 255, 255), 4),
+          Color("B", (128, 32, 32), (159, 255, 255), 4)]
+          # Color("G", (42, 88, 67), (78, 255, 117), 4)]
+
+
+        #  Color("G", (40, 40, 30), (101, 255, 255), 4)]
+
+
+    # [Color("G", (54, 36, 68), (90, 180, 161), 2),
+    #      Color("R", (118, 80, 96), (205, 201, 234), 1),
+    #      Color("Y", (24, 65, 110), (44, 137, 255), 1),
+    #      Color("B", (110, 20, 0), (255, 255, 131), 1)]
+
+angles = []
 
 total_objects = 0
-for color in setup:
-    color.x_pos = [[0]] * color.num_objects
-    color.y_pos = [[0]] * color.num_objects
+for color in colors:
+    color.x_pos = [[None]] * color.num_objects
+    color.y_pos = [[None]] * color.num_objects
     total_objects = total_objects + color.num_objects
 
 
-vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\robo_footage\two_green.mp4')
+vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\robo_footage\004.mp4')
 
 # loop through frames
 while True:
@@ -72,7 +128,7 @@ while True:
     # a series of dilations and erosions to remove any small
     # blobs left in the mask
 
-    for color in setup:
+    for color in colors:
         mask = cv2.inRange(hsv, color.lower_bound_HSV, color.upper_bound_HSV)
         mask = cv2.erode(mask, None, iterations=2)
         mask = cv2.dilate(mask, None, iterations=6)
@@ -88,41 +144,70 @@ while True:
         center = None
 
         # only proceed if all objects are accounted for
-        if len(cnts) == color.num_objects:
+        if len(cnts) <= color.num_objects:
             # sort contours by y position, then use
             # them to compute the minimum enclosing circle and
             # centroid
 
             cnts.sort(key=lambda y_pos: cv2.moments(y_pos)['m01']/cv2.moments(y_pos)['m00'])
 
-            index = 0
-            for cnt in cnts:
-                ((x, y), radius) = cv2.minEnclosingCircle(cnt)
-                M = cv2.moments(cnt)
+            ID = 0
+            for i in range(0, len(cnts)):
+                ((x, y), radius) = cv2.minEnclosingCircle(cnts[i])
+                M = cv2.moments(cnts[i])
                 # draw the circle and centroid on the frame,
                 # then update the list of tracked points
+
+                x = int(M["m10"] / M["m00"])
+                y = int(M["m01"] / M["m00"])
+
+                try:
+                    if y > int(color.y_pos[i][-1]) + 20 and ID < color.num_objects - 2:
+                        ID = ID + 1
+                except:
+                    pass
+
                 cv2.circle(frame, (int(x), int(y)), int(radius),
                            (255, 0, 0), 2)
-                cv2.putText(frame, color.label + str(index + 1), (int(x), int(y - radius)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
+                cv2.putText(frame, color.label + str(ID + 1), (int(x), int(y - radius)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
 
-                color.x_pos[index].append(int(M["m10"] / M["m00"]))
-                color.y_pos[index].append(int(M["m01"] / M["m00"]))
+                tempx = color.x_pos[ID].copy()
+                tempy = color.y_pos[ID].copy()
+                tempx.append(int(x))
+                tempy.append(int(y))
 
-                print(color.x_pos)
+                color.x_pos[ID] = tempx.copy()
+                color.y_pos[ID] = tempy.copy()
+
+                ID = ID + 1
+
+
+
                 # loop over the set of tracked points
-                for i in range(len(color.x_pos[index])):
-                    # if either of the tracked points are None, ignore them
 
-                    if color.x_pos[index][i - 1] is None or color.x_pos[index][i] is None:
-                        continue
+    for color in colors:
+        for obj in range(color.num_objects):
+            for i in range(len(color.x_pos[obj])):
+                # if either of the tracked points are None, ignore them
 
-                    # otherwise, compute the thickness of the line and
-                    # draw the connecting lines
-                    cv2.line(frame, (color.x_pos[index][i - 1], color.y_pos[index][i - 1]),
-                             (color.x_pos[index][i], color.y_pos[index][i]), (4, 236, 255), 1)
+                if color.x_pos[obj][i - 1] is None or color.x_pos[obj][i] is None:
+                    continue
 
-                index = index + 1
+                # otherwise, compute the thickness of the line and
+                # draw the connecting lines
+                cv2.line(frame, (color.x_pos[obj][i - 1], color.y_pos[obj][i - 1]),
+                         (color.x_pos[obj][i], color.y_pos[obj][i]), (4, 236, 255), 1)
 
+        drawline(colors[0], 0, colors[1], 0)
+        drawline(colors[0], 1, colors[1], 1)
+        drawline(colors[0], 2, colors[1], 2)
+        drawline(colors[0], 3, colors[1], 3)
+
+        # ang = int(angle(colors[0], 1, colors[0], 0, colors[3], 0, colors[0], 0))
+        # cv2.putText(frame, str(ang), (colors[0].x_pos[1][-1]-20, colors[0].y_pos[1][-1]+20), cv2.FONT_HERSHEY_SIMPLEX,
+    #             0.5, (255, 255, 255), 2)
+    #
+    # angles.append(ang)
 
     # show the frame to our screen
     cv2.imshow("Frame", frame)

@@ -80,9 +80,9 @@ def drawline(color1, id1, color2, id2):
 
 
 # list of Color objects to look for
-colors = [Color("R", (0, 110, 0), (15, 255, 255), 4),
-          Color("B", (128, 32, 32), (159, 255, 255), 4)]
-          # Color("G", (42, 88, 67), (78, 255, 117), 4)]
+colors = [Color("R", (0, 50, 20), (15, 255, 255), 4),
+          Color("B", (135, 0, 36), (255, 130, 66), 4),
+          Color("G", (52, 122, 14), (102, 255, 117), 2)]
 
 
         #  Color("G", (40, 40, 30), (101, 255, 255), 4)]
@@ -102,7 +102,7 @@ for color in colors:
     total_objects = total_objects + color.num_objects
 
 
-vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\robo_footage\004.mp4')
+vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\obstruction_footage\0_b_5.mp4')
 
 # loop through frames
 while True:
@@ -148,6 +148,7 @@ while True:
             # sort contours by y position, then use
             # them to compute the minimum enclosing circle and
             # centroid
+
 
             cnts.sort(key=lambda y_pos: cv2.moments(y_pos)['m01']/cv2.moments(y_pos)['m00'])
 
@@ -198,10 +199,10 @@ while True:
                 cv2.line(frame, (color.x_pos[obj][i - 1], color.y_pos[obj][i - 1]),
                          (color.x_pos[obj][i], color.y_pos[obj][i]), (4, 236, 255), 1)
 
-        drawline(colors[0], 0, colors[1], 0)
-        drawline(colors[0], 1, colors[1], 1)
-        drawline(colors[0], 2, colors[1], 2)
-        drawline(colors[0], 3, colors[1], 3)
+        # drawline(colors[0], 0, colors[1], 0)
+        # drawline(colors[0], 1, colors[1], 1)
+        # drawline(colors[0], 2, colors[1], 2)
+        # drawline(colors[0], 3, colors[1], 3)
 
         # ang = int(angle(colors[0], 1, colors[0], 0, colors[3], 0, colors[0], 0))
         # cv2.putText(frame, str(ang), (colors[0].x_pos[1][-1]-20, colors[0].y_pos[1][-1]+20), cv2.FONT_HERSHEY_SIMPLEX,
