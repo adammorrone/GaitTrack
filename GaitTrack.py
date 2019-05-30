@@ -81,7 +81,7 @@ def drawline(color1, id1, color2, id2):
 
 # list of Color objects to look for
 colors = [Color("R", (0, 50, 20), (15, 255, 255), 4),
-          Color("B", (135, 0, 36), (255, 130, 66), 4),
+          Color("B", (121, 24, 14), (166, 125, 98), 4),
           Color("G", (52, 122, 14), (102, 255, 117), 2)]
 
 
@@ -105,7 +105,10 @@ for color in colors:
 vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\obstruction_footage\0_b_5.mp4')
 
 # loop through frames
+frame_count = 0
 while True:
+    frame_count = frame_count + 1
+
     # grab the current frame
     frame = vs.read()
 
@@ -130,9 +133,9 @@ while True:
 
     for color in colors:
         mask = cv2.inRange(hsv, color.lower_bound_HSV, color.upper_bound_HSV)
-        mask = cv2.erode(mask, None, iterations=2)
-        mask = cv2.dilate(mask, None, iterations=6)
-        mask = cv2.erode(mask, None, iterations=4)
+        mask = cv2.erode(mask, None, iterations=1)
+        mask = cv2.dilate(mask, None, iterations=4)
+        mask = cv2.erode(mask, None, iterations=3)
 
         # find contours in the mask and initialize the current
         # (x, y) center of the ball
@@ -143,48 +146,50 @@ while True:
 
         center = None
 
-        # only proceed if all objects are accounted for
-        if len(cnts) <= color.num_objects:
-            # sort contours by y position, then use
-            # them to compute the minimum enclosing circle and
-            # centroid
+        # sort contours by y position, then use
+        # them to compute the minimum enclosing circle and
+        # centroid
+
+        if len(cnts) > color.num_objects:
+            cnts.sort(key=lambda cnt: cv2.contourArea(cnt))
+            cnts = cnts[0:color.num_objects]
+        cnts.sort(key=lambda y_pos: cv2.moments(y_pos)['m01']/cv2.moments(y_pos)['m00'])
+
+        ID = -1
+        for i in range(0, len(cnts)):
+
+            ID = ID + 1
+
+            ((x, y), radius) = cv2.minEnclosingCircle(cnts[i])
+            M = cv2.moments(cnts[i])
+            # draw the circle and centroid on the frame,
+            # then update the list of tracked points
+
+            x = int(M["m10"] / M["m00"])
+            y = int(M["m01"] / M["m00"])
+
+            if frame_count > 0 and color.y_pos[i][-1]:
+                if y > color.y_pos[i][-1] + 20 and ID < color.num_objects-1:
+                    ID = ID + 1
+
+            cv2.circle(frame, (int(x), int(y)), int(radius),
+                       (255, 0, 0), 2)
+            cv2.putText(frame, color.label + str(ID + 1), (int(x), int(y - radius)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
 
 
-            cnts.sort(key=lambda y_pos: cv2.moments(y_pos)['m01']/cv2.moments(y_pos)['m00'])
+            tempx = color.x_pos[ID].copy()
+            tempy = color.y_pos[ID].copy()
+            tempx.append(int(x))
+            tempy.append(int(y))
 
-            ID = 0
-            for i in range(0, len(cnts)):
-                ((x, y), radius) = cv2.minEnclosingCircle(cnts[i])
-                M = cv2.moments(cnts[i])
-                # draw the circle and centroid on the frame,
-                # then update the list of tracked points
+            color.x_pos[ID] = tempx.copy()
+            color.y_pos[ID] = tempy.copy()
 
-                x = int(M["m10"] / M["m00"])
-                y = int(M["m01"] / M["m00"])
-
-                try:
-                    if y > int(color.y_pos[i][-1]) + 20 and ID < color.num_objects - 2:
-                        ID = ID + 1
-                except:
-                    pass
-
-                cv2.circle(frame, (int(x), int(y)), int(radius),
-                           (255, 0, 0), 2)
-                cv2.putText(frame, color.label + str(ID + 1), (int(x), int(y - radius)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
-
-                tempx = color.x_pos[ID].copy()
-                tempy = color.y_pos[ID].copy()
-                tempx.append(int(x))
-                tempy.append(int(y))
-
-                color.x_pos[ID] = tempx.copy()
-                color.y_pos[ID] = tempy.copy()
-
-                ID = ID + 1
+            if ID == color.num_objects-1:
+                break
 
 
 
-                # loop over the set of tracked points
 
     for color in colors:
         for obj in range(color.num_objects):
