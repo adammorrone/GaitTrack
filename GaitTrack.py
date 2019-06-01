@@ -80,8 +80,8 @@ def drawline(color1, id1, color2, id2):
 
 
 # list of Color objects to look for
-colors = [Color("R", (0, 50, 20), (15, 255, 255), 4),
-          Color("B", (121, 24, 14), (166, 125, 98), 4),
+colors = [Color("R", (0, 132, 70), (11, 255, 255), 4),
+          # Color("B", (121, 24, 14), (166, 125, 98), 4),
           Color("G", (52, 122, 14), (102, 255, 117), 2)]
 
 
@@ -102,7 +102,7 @@ for color in colors:
     total_objects = total_objects + color.num_objects
 
 
-vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\obstruction_footage\0_b_5.mp4')
+vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\obstruction_footage\1-3_b_5.mp4')
 
 # loop through frames
 frame_count = 0
@@ -133,9 +133,9 @@ while True:
 
     for color in colors:
         mask = cv2.inRange(hsv, color.lower_bound_HSV, color.upper_bound_HSV)
-        mask = cv2.erode(mask, None, iterations=1)
-        mask = cv2.dilate(mask, None, iterations=4)
-        mask = cv2.erode(mask, None, iterations=3)
+        mask = cv2.erode(mask, None, iterations=2)
+        mask = cv2.dilate(mask, None, iterations=6)
+        mask = cv2.erode(mask, None, iterations=4)
 
         # find contours in the mask and initialize the current
         # (x, y) center of the ball
@@ -168,14 +168,24 @@ while True:
             x = int(M["m10"] / M["m00"])
             y = int(M["m01"] / M["m00"])
 
-            if frame_count > 0 and color.y_pos[i][-1]:
-                if y > color.y_pos[i][-1] + 20 and ID < color.num_objects-1:
-                    ID = ID + 1
-
             cv2.circle(frame, (int(x), int(y)), int(radius),
                        (255, 0, 0), 2)
-            cv2.putText(frame, color.label + str(ID + 1), (int(x), int(y - radius)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
 
+            correct_ID = False
+
+            while not correct_ID:
+                if frame_count == 0 or not color.y_pos[i][-1]:
+                    correct_ID = True
+
+                elif y <= color.y_pos[i][-1] + 20 or ID >= color.num_objects - 1:
+                    correct_ID = True
+
+                else:
+                    ID = ID + 1
+
+
+
+            cv2.putText(frame, color.label + str(ID + 1), (int(x), int(y - radius)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
 
             tempx = color.x_pos[ID].copy()
             tempy = color.y_pos[ID].copy()
@@ -187,9 +197,6 @@ while True:
 
             if ID == color.num_objects-1:
                 break
-
-
-
 
     for color in colors:
         for obj in range(color.num_objects):
