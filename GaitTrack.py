@@ -183,8 +183,6 @@ while True:
                 else:
                     ID = ID + 1
 
-
-
             cv2.putText(frame, color.label + str(ID + 1), (int(x), int(y - radius)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
 
             tempx = color.x_pos[ID].copy()
