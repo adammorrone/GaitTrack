@@ -63,7 +63,7 @@ def angle(ln1_color1, id1_1, ln1_color2, id1_2, ln2_color1, id2_1, ln2_color2, i
     return math.degrees(theta)
 
 
-def drawline(color1, id1, color2, id2):
+def drawline(color1, id1, color2, id2, b=255, g=255, r=255, thickness=2):
     x1 = color1.x_pos[id1][-1]
     x2 = color2.x_pos[id2][-1]
     y1 = color1.y_pos[id1][-1]
@@ -77,7 +77,7 @@ def drawline(color1, id1, color2, id2):
     y1 = int(y1 + rise*1.5)
     y2 = int(y2 - rise*1.5)
 
-    cv2.line(frame, (x1, y1), (x2, y2), (255, 255, 255), 2)
+    cv2.line(frame, (x1, y1), (x2, y2), (b, g, r), thickness)
 
 
 # list of Color objects to look for
@@ -103,7 +103,7 @@ for color in colors:
     total_objects = total_objects + color.num_objects
 
 
-vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\obstruction_footage\1-4_a_12.mp4')
+vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\obstruction_footage\1-3_b_1.mp4')
 
 # loop through frames
 frame_count = 0
@@ -222,6 +222,40 @@ while True:
         # drawline(colors[0], 1, colors[1], 1)
         # drawline(colors[0], 2, colors[1], 2)
         # drawline(colors[0], 3, colors[1], 3)
+
+        # draws containing lines
+        drawline(colors[1], 0, colors[1], 1, 0, 0, 255)
+
+        x1 = int(sum(colors[1].x_pos[0])/len(colors[1].x_pos[0]))
+        x2 = int(sum(colors[1].x_pos[1])/len(colors[1].x_pos[0]))
+        y1 = int(sum(colors[1].y_pos[0])/len(colors[1].y_pos[0]))
+        y2 = int(sum(colors[1].y_pos[1])/len(colors[1].y_pos[0]))
+
+        rise = y1 - y2
+        run = x1 - x2
+
+        x3 = int(x1 + rise * 1.5)
+        x4 = int(x2 - rise * 1.5)
+        y3 = int(y1 - run * 1.5)
+        y4 = int(y2 + run * 1.5)
+
+        x1 = int(x1 - rise * 1.5)
+        x2 = int(x2 + rise * 1.5)
+        y1 = int(y1 + run * 1.5)
+        y2 = int(y2 - run * 1.5)
+
+        cv2.line(frame, (x1, y1), (x3, y3), (0, 0, 255), 2)
+        cv2.line(frame, (x2, y2), (x4, y4), (0, 0, 255), 2)
+
+
+
+        # cv2.line(frame, (int(sum(colors[1].x_pos[0])/len(colors[1].x_pos[0])), 0),
+        #          (int(sum(colors[1].x_pos[0])/len(colors[1].x_pos[0])), 1200), (0, 0, 255), 2)
+        #
+        # cv2.line(frame, (int(sum(colors[1].x_pos[1]) / len(colors[1].x_pos[1])), 0),
+        #          (int(sum(colors[1].x_pos[1]) / len(colors[1].x_pos[1])), 1200), (0, 0, 255), 2)
+
+
 
 
         # ang = int(angle(colors[0], 1, colors[0], 0, colors[3], 0, colors[0], 0))
