@@ -30,6 +30,7 @@ class Color:
     num_objects: int = 1
     x_pos: list = None
     y_pos: list = None
+    all_pos_established = False
 
 
 # datatype should be two colors and the object number of intersst
@@ -97,12 +98,12 @@ angles = []
 
 total_objects = 0
 for color in colors:
-    color.x_pos = [[None]] * color.num_objects
-    color.y_pos = [[None]] * color.num_objects
+    color.x_pos = [[]] * color.num_objects
+    color.y_pos = [[]] * color.num_objects
     total_objects = total_objects + color.num_objects
 
 
-vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\obstruction_footage\1-3_b_5.mp4')
+vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\obstruction_footage\1-4_a_12.mp4')
 
 # loop through frames
 frame_count = 0
@@ -173,39 +174,47 @@ while True:
 
             correct_ID = False
 
-            while not correct_ID:
-                if frame_count == 0 or not color.y_pos[i][-1]:
-                    correct_ID = True
+            # tracks dots through discontinuity
 
-                elif y <= color.y_pos[i][-1] + 20 or ID >= color.num_objects - 1:
-                    correct_ID = True
+            if len(cnts) == color.num_objects:
+                color.all_pos_established = True
 
-                else:
-                    ID = ID + 1
+            elif color.all_pos_established:
+                multiplier = 0
+                while not correct_ID and multiplier < 20:
+                    for j in range(ID, color.num_objects):
+                        low = min(color.y_pos[j]) * (1 - multiplier*0.01)
+                        high = max(color.y_pos[j]) * (1 + multiplier*0.01)
+                        if low <= y <= high:
+                            ID = j
+                            correct_ID = True
+                            break
+                    multiplier = multiplier + 1
 
-            cv2.putText(frame, color.label + str(ID + 1), (int(x), int(y - radius)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
+            if color.all_pos_established:
+                cv2.putText(frame, color.label + str(ID + 1), (int(x), int(y - radius)),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
 
-            tempx = color.x_pos[ID].copy()
-            tempy = color.y_pos[ID].copy()
-            tempx.append(int(x))
-            tempy.append(int(y))
+                tempx = color.x_pos[ID].copy()
+                tempy = color.y_pos[ID].copy()
+                tempx.append(int(x))
+                tempy.append(int(y))
 
-            color.x_pos[ID] = tempx.copy()
-            color.y_pos[ID] = tempy.copy()
+                color.x_pos[ID] = tempx.copy()
+                color.y_pos[ID] = tempy.copy()
 
             if ID == color.num_objects-1:
                 break
 
     for color in colors:
         for obj in range(color.num_objects):
-            for i in range(len(color.x_pos[obj])):
+            for i in range(1, len(color.x_pos[obj])):
                 # if either of the tracked points are None, ignore them
 
                 if color.x_pos[obj][i - 1] is None or color.x_pos[obj][i] is None:
                     continue
 
-                # otherwise, compute the thickness of the line and
-                # draw the connecting lines
+                # draw the trace lines
                 cv2.line(frame, (color.x_pos[obj][i - 1], color.y_pos[obj][i - 1]),
                          (color.x_pos[obj][i], color.y_pos[obj][i]), (4, 236, 255), 1)
 
@@ -213,6 +222,7 @@ while True:
         # drawline(colors[0], 1, colors[1], 1)
         # drawline(colors[0], 2, colors[1], 2)
         # drawline(colors[0], 3, colors[1], 3)
+
 
         # ang = int(angle(colors[0], 1, colors[0], 0, colors[3], 0, colors[0], 0))
         # cv2.putText(frame, str(ang), (colors[0].x_pos[1][-1]-20, colors[0].y_pos[1][-1]+20), cv2.FONT_HERSHEY_SIMPLEX,
