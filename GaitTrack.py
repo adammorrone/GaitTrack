@@ -6,8 +6,6 @@ import matplotlib.pyplot as plt
 from dataclasses import dataclass
 import math
 
-
-
 # construct the argument parse and parse the arguments
 # ap = argparse.ArgumentParser()
 # ap.add_argument("-v", "--video",
@@ -103,7 +101,7 @@ for color in colors:
     total_objects = total_objects + color.num_objects
 
 
-vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\obstruction_footage\1-3_b_1.mp4')
+vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\obstruction_footage\0_b_1.mp4')
 
 # loop through frames
 frame_count = 0
@@ -195,6 +193,19 @@ while True:
                 cv2.putText(frame, color.label + str(ID + 1), (int(x), int(y - radius)),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
 
+                # hard coded green!
+                if color.label != 'G' and len(colors[1].x_pos[0]) and len(color.x_pos[ID]):
+                    left_boundary = int(sum(colors[1].x_pos[0])/len(colors[1].x_pos[0]))
+                    if color.x_pos[ID][-1] < left_boundary <= x:
+                        color.x_pos[ID] = []
+                        color.y_pos[ID] = []
+
+                    right_boundary = int(sum(colors[1].x_pos[1]) / len(colors[1].x_pos[1]))
+                    if x > right_boundary:
+                        break
+
+
+
                 tempx = color.x_pos[ID].copy()
                 tempy = color.y_pos[ID].copy()
                 tempx.append(int(x))
@@ -224,7 +235,7 @@ while True:
         # drawline(colors[0], 3, colors[1], 3)
 
         # draws containing lines
-        drawline(colors[1], 0, colors[1], 1, 0, 0, 255)
+
 
         x1 = int(sum(colors[1].x_pos[0])/len(colors[1].x_pos[0]))
         x2 = int(sum(colors[1].x_pos[1])/len(colors[1].x_pos[0]))
@@ -247,13 +258,13 @@ while True:
         cv2.line(frame, (x1, y1), (x3, y3), (0, 0, 255), 2)
         cv2.line(frame, (x2, y2), (x4, y4), (0, 0, 255), 2)
 
+        drawline(colors[1], 0, colors[1], 1, 0, 0, 255)
 
-
-        # cv2.line(frame, (int(sum(colors[1].x_pos[0])/len(colors[1].x_pos[0])), 0),
-        #          (int(sum(colors[1].x_pos[0])/len(colors[1].x_pos[0])), 1200), (0, 0, 255), 2)
+        # cv2.line(frame, (int(sum(colors[1].x_pos[0])/len(colors[1].x_pos[0])), (int(sum(colors[1].y_pos[0])/len(colors[1].y_pos[0])))),
+        #          (int(sum(colors[1].x_pos[0])/len(colors[1].x_pos[0])), int(sum(colors[1].y_pos[0])/len(colors[1].y_pos[0]))), (0, 0, 255), 2)
         #
-        # cv2.line(frame, (int(sum(colors[1].x_pos[1]) / len(colors[1].x_pos[1])), 0),
-        #          (int(sum(colors[1].x_pos[1]) / len(colors[1].x_pos[1])), 1200), (0, 0, 255), 2)
+        # cv2.line(frame, (int(sum(colors[1].x_pos[1]) / len(colors[1].x_pos[1])), int(sum(colors[1].y_pos[1]) / len(colors[1].y_pos[1]))),
+        #          (int(sum(colors[1].x_pos[1]) / len(colors[1].x_pos[1])), int(sum(colors[1].y_pos[1]) / len(colors[1].y_pos[1]))), (0, 0, 255), 2)
 
 
 
@@ -283,6 +294,8 @@ vs.release()
 
 # close all windows
 #cv2.destroyAllWindows()
+
+
 
 
 
