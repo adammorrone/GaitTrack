@@ -79,10 +79,12 @@ def drawline(color1, id1, color2, id2, b=255, g=255, r=255, thickness=2):
 
 
 # list of Color objects to look for
-colors = [Color("R", (0, 132, 70), (11, 255, 255), 4),
+colors = [Color("G", (52, 122, 14), (102, 255, 117), 2),
+          Color("R", (0, 132, 70), (11, 255, 255), 4)
           # Color("B", (121, 24, 14), (166, 125, 98), 4),
-          Color("G", (52, 122, 14), (102, 255, 117), 2)]
+          ]
 
+ref_ID = 0
 
         #  Color("G", (40, 40, 30), (101, 255, 255), 4)]
 
@@ -194,17 +196,26 @@ while True:
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
 
                 # hard coded green!
-                if color.label != 'G' and len(colors[1].x_pos[0]) and len(color.x_pos[ID]):
-                    left_boundary = int(sum(colors[1].x_pos[0])/len(colors[1].x_pos[0]))
+                if color.label != 'G' and len(colors[ref_ID].x_pos[0]) and len(color.x_pos[ID]):
+
+                    x1 = int(sum(colors[ref_ID].x_pos[0]) / len(colors[ref_ID].x_pos[0]))
+                    x2 = int(sum(colors[ref_ID].x_pos[1]) / len(colors[ref_ID].x_pos[0]))
+                    y1 = int(sum(colors[ref_ID].y_pos[0]) / len(colors[ref_ID].y_pos[0]))
+                    y2 = int(sum(colors[ref_ID].y_pos[1]) / len(colors[ref_ID].y_pos[0]))
+
+                    rise = y1 - y2
+                    run = x1 - x2
+                    line_slope = rise / run
+                    offset = y1 - x1 * line_slope
+
+                    left_boundary = (int(sum(colors[ref_ID].y_pos[0])/len(colors[ref_ID].y_pos[0])) - offset) / line_slope
                     if color.x_pos[ID][-1] < left_boundary <= x:
                         color.x_pos[ID] = []
                         color.y_pos[ID] = []
 
-                    right_boundary = int(sum(colors[1].x_pos[1]) / len(colors[1].x_pos[1]))
+                    right_boundary = (int(sum(colors[ref_ID].y_pos[1]) / len(colors[ref_ID].y_pos[1])) - offset) / line_slope
                     if x > right_boundary:
                         break
-
-
 
                 tempx = color.x_pos[ID].copy()
                 tempy = color.y_pos[ID].copy()
@@ -237,10 +248,10 @@ while True:
         # draws containing lines
 
 
-        x1 = int(sum(colors[1].x_pos[0])/len(colors[1].x_pos[0]))
-        x2 = int(sum(colors[1].x_pos[1])/len(colors[1].x_pos[0]))
-        y1 = int(sum(colors[1].y_pos[0])/len(colors[1].y_pos[0]))
-        y2 = int(sum(colors[1].y_pos[1])/len(colors[1].y_pos[0]))
+        x1 = int(sum(colors[ref_ID].x_pos[0])/len(colors[ref_ID].x_pos[0]))
+        x2 = int(sum(colors[ref_ID].x_pos[1])/len(colors[ref_ID].x_pos[0]))
+        y1 = int(sum(colors[ref_ID].y_pos[0])/len(colors[ref_ID].y_pos[0]))
+        y2 = int(sum(colors[ref_ID].y_pos[1])/len(colors[ref_ID].y_pos[0]))
 
         rise = y1 - y2
         run = x1 - x2
@@ -258,7 +269,7 @@ while True:
         cv2.line(frame, (x1, y1), (x3, y3), (0, 0, 255), 2)
         cv2.line(frame, (x2, y2), (x4, y4), (0, 0, 255), 2)
 
-        drawline(colors[1], 0, colors[1], 1, 0, 0, 255)
+        drawline(colors[ref_ID], 0, colors[ref_ID], 1, 0, 0, 255)
 
         # cv2.line(frame, (int(sum(colors[1].x_pos[0])/len(colors[1].x_pos[0])), (int(sum(colors[1].y_pos[0])/len(colors[1].y_pos[0])))),
         #          (int(sum(colors[1].x_pos[0])/len(colors[1].x_pos[0])), int(sum(colors[1].y_pos[0])/len(colors[1].y_pos[0]))), (0, 0, 255), 2)
