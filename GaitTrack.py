@@ -103,7 +103,7 @@ for color in colors:
     total_objects = total_objects + color.num_objects
 
 
-vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\obstruction_footage\0_b_1.mp4')
+vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\obstruction_footage\2-3_b_1.mp4')
 
 # loop through frames
 frame_count = 0
@@ -208,12 +208,12 @@ while True:
                     line_slope = rise / run
                     offset = y1 - x1 * line_slope
 
-                    left_boundary = (int(sum(colors[ref_ID].y_pos[0])/len(colors[ref_ID].y_pos[0])) - offset) / line_slope
+                    left_boundary = int((sum(colors[ref_ID].y_pos[0])/len(colors[ref_ID].y_pos[0]) - offset) / line_slope)
                     if color.x_pos[ID][-1] < left_boundary <= x:
                         color.x_pos[ID] = []
                         color.y_pos[ID] = []
 
-                    right_boundary = (int(sum(colors[ref_ID].y_pos[1]) / len(colors[ref_ID].y_pos[1])) - offset) / line_slope
+                    right_boundary = int((sum(colors[ref_ID].y_pos[1]) / len(colors[ref_ID].y_pos[1]) - offset) / line_slope)
                     if x > right_boundary:
                         break
 
