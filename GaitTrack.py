@@ -79,14 +79,14 @@ def drawline(color1, id1, color2, id2, b=255, g=255, r=255, thickness=2):
 
 
 # list of Color objects to look for
-colors = [Color("G", (52, 122, 14), (102, 255, 117), 2),
-          Color("R", (0, 132, 70), (11, 255, 255), 4)
-          # Color("B", (121, 24, 14), (166, 125, 98), 4),
+colors = [Color("G", (39, 55, 78), (85, 255, 255), 2),
+          Color("R", (166, 93, 150), (174, 255, 255), 4),
+          Color("O", (0, 66, 144), (18, 255, 255), 4)
           ]
 
 ref_ID = 0
 
-        #  Color("G", (40, 40, 30), (101, 255, 255), 4)]
+# Color("G", (40, 40, 30), (101, 255, 255), 4)]
 
 
     # [Color("G", (54, 36, 68), (90, 180, 161), 2),
@@ -102,8 +102,8 @@ for color in colors:
     color.y_pos = [[]] * color.num_objects
     total_objects = total_objects + color.num_objects
 
-
-vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\obstruction_footage\2-3_b_1.mp4')
+# vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\obstruction_footage\2-3_b_1.mp4')
+vs = cv2.VideoCapture(r'F:\DCIM\100NIKON\DSCN0438.MP4')
 
 # loop through frames
 frame_count = 0
@@ -123,7 +123,7 @@ while True:
 
     # resize the frame, blur it, and convert it to the HSV
     # color space
-    frame = imutils.resize(frame, width=1200)
+    frame = imutils.resize(frame, width=1000)
 
     blurred = cv2.GaussianBlur(frame, (11, 11), 0)
     hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
@@ -134,9 +134,10 @@ while True:
 
     for color in colors:
         mask = cv2.inRange(hsv, color.lower_bound_HSV, color.upper_bound_HSV)
-        mask = cv2.erode(mask, None, iterations=2)
+        mask = cv2.erode(mask, None, iterations=1)
         mask = cv2.dilate(mask, None, iterations=6)
         mask = cv2.erode(mask, None, iterations=4)
+
 
         # find contours in the mask and initialize the current
         # (x, y) center of the ball
@@ -203,19 +204,20 @@ while True:
                     y1 = int(sum(colors[ref_ID].y_pos[0]) / len(colors[ref_ID].y_pos[0]))
                     y2 = int(sum(colors[ref_ID].y_pos[1]) / len(colors[ref_ID].y_pos[0]))
 
-                    rise = y1 - y2
-                    run = x1 - x2
-                    line_slope = rise / run
-                    offset = y1 - x1 * line_slope
+                    rise = y2 - y1
+                    run = x2 - x1
+                    line_slope = -run / rise
+                    offset_left = y1 - x1 * line_slope
+                    offset_right = y2 - x2 * line_slope
 
-                    left_boundary = int((sum(colors[ref_ID].y_pos[0])/len(colors[ref_ID].y_pos[0]) - offset) / line_slope)
+                    left_boundary = int((sum(colors[ref_ID].y_pos[0])/len(colors[ref_ID].y_pos[0]) - offset_left) / line_slope)
                     if color.x_pos[ID][-1] < left_boundary <= x:
                         color.x_pos[ID] = []
                         color.y_pos[ID] = []
 
-                    right_boundary = int((sum(colors[ref_ID].y_pos[1]) / len(colors[ref_ID].y_pos[1]) - offset) / line_slope)
-                    if x > right_boundary:
-                        break
+                    right_boundary = int((sum(colors[ref_ID].y_pos[1])/len(colors[ref_ID].y_pos[1]) - offset_right) / line_slope)
+                    if x >= right_boundary:
+                        continue
 
                 tempx = color.x_pos[ID].copy()
                 tempy = color.y_pos[ID].copy()
@@ -246,7 +248,6 @@ while True:
         # drawline(colors[0], 3, colors[1], 3)
 
         # draws containing lines
-
 
         x1 = int(sum(colors[ref_ID].x_pos[0])/len(colors[ref_ID].x_pos[0]))
         x2 = int(sum(colors[ref_ID].x_pos[1])/len(colors[ref_ID].x_pos[0]))
@@ -287,6 +288,7 @@ while True:
     # angles.append(ang)
 
     # show the frame to our screen
+
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF
 
