@@ -79,10 +79,17 @@ def drawline(color1, id1, color2, id2, b=255, g=255, r=255, thickness=2):
 
 
 # list of Color objects to look for
-colors = [Color("G", (39, 55, 78), (85, 255, 255), 2),
-          Color("R", (166, 93, 150), (174, 255, 255), 4),
-          Color("O", (0, 66, 144), (18, 255, 255), 4)
+colors = [Color("G", (50, 101, 94), (97, 255, 255), 2),
+          Color("R", (159, 100, 51), (186, 255, 255), 4),
+          Color("B", (96, 71, 43), (141, 255, 255), 4)
           ]
+
+colors_top_light = [Color("G", (54, 101, 49), (72, 255, 255), 2),
+                    Color("R", (159, 100, 51), (186, 255, 255), 4),
+                    Color("B", (100, 56, 0), (116, 255, 255), 4)
+                    ]
+
+colors = colors_top_light
 
 ref_ID = 0
 
@@ -102,8 +109,8 @@ for color in colors:
     color.y_pos = [[]] * color.num_objects
     total_objects = total_objects + color.num_objects
 
-# vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\obstruction_footage\2-3_b_1.mp4')
-vs = cv2.VideoCapture(r'F:\DCIM\100NIKON\DSCN0438.MP4')
+
+vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\obstruction_footage_white\0_a_14.mp4')
 
 # loop through frames
 frame_count = 0
@@ -134,10 +141,13 @@ while True:
 
     for color in colors:
         mask = cv2.inRange(hsv, color.lower_bound_HSV, color.upper_bound_HSV)
+
         mask = cv2.erode(mask, None, iterations=1)
         mask = cv2.dilate(mask, None, iterations=6)
-        mask = cv2.erode(mask, None, iterations=4)
+        mask = cv2.erode(mask, None, iterations=5)
 
+        if color.label == 'O':
+            cv2.imshow("Frame", mask)
 
         # find contours in the mask and initialize the current
         # (x, y) center of the ball
@@ -242,10 +252,10 @@ while True:
                 cv2.line(frame, (color.x_pos[obj][i - 1], color.y_pos[obj][i - 1]),
                          (color.x_pos[obj][i], color.y_pos[obj][i]), (4, 236, 255), 1)
 
-        # drawline(colors[0], 0, colors[1], 0)
-        # drawline(colors[0], 1, colors[1], 1)
-        # drawline(colors[0], 2, colors[1], 2)
-        # drawline(colors[0], 3, colors[1], 3)
+        # drawline(colors[2], 0, colors[1], 0)
+        # drawline(colors[2], 1, colors[1], 1)
+        # drawline(colors[2], 2, colors[1], 2)
+        # drawline(colors[2], 3, colors[1], 3)
 
         # draws containing lines
 
