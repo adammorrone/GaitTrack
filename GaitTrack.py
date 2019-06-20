@@ -61,6 +61,17 @@ def angle(ln1_color1, id1_1, ln1_color2, id1_2, ln2_color1, id2_1, ln2_color2, i
     return math.degrees(theta)
 
 
+def last_known_value(arr):
+    value_found = False
+    k = len(arr) - 1
+    while not value_found and k > 0:
+        if arr[k]:
+            break
+        k = k - 1
+
+    return arr[k]
+
+
 def drawline(color1, id1, color2, id2, b=255, g=255, r=255, thickness=2):
     x1 = color1.x_pos[id1][-1]
     x2 = color2.x_pos[id2][-1]
@@ -89,7 +100,7 @@ colors_top_light = [Color("G", (54, 101, 49), (72, 255, 255), 2),
                     Color("B", (100, 56, 0), (116, 255, 255), 4)
                     ]
 
-colors = colors_top_light
+# colors = colors_top_light
 
 ref_ID = 0
 
@@ -110,7 +121,7 @@ for color in colors:
     total_objects = total_objects + color.num_objects
 
 
-vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\obstruction_footage_white\0_a_14.mp4')
+vs = cv2.VideoCapture(r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analysis\obstruction_footage_white\1-4_a_2.mp4')
 
 # loop through frames
 frame_count = 0
@@ -194,8 +205,10 @@ while True:
                 multiplier = 0
                 while not correct_ID and multiplier < 20:
                     for j in range(ID, color.num_objects):
-                        low = min(color.y_pos[j]) * (1 - multiplier*0.01)
-                        high = max(color.y_pos[j]) * (1 + multiplier*0.01)
+                        minimum = min(m for m in color.y_pos[j] if m is not None)
+                        low = minimum * (1 - multiplier*0.01)
+                        maximum = max(m for m in color.y_pos[j] if m is not None)
+                        high = maximum * (1 + multiplier*0.01)
                         if low <= y <= high:
                             ID = j
                             correct_ID = True
@@ -206,7 +219,7 @@ while True:
                 cv2.putText(frame, color.label + str(ID + 1), (int(x), int(y - radius)),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
 
-                # hard coded green!
+                # hard coded green as marker color!
                 if color.label != 'G' and len(colors[ref_ID].x_pos[0]) and len(color.x_pos[ID]):
 
                     x1 = int(sum(colors[ref_ID].x_pos[0]) / len(colors[ref_ID].x_pos[0]))
@@ -221,24 +234,26 @@ while True:
                     offset_right = y2 - x2 * line_slope
 
                     left_boundary = int((sum(colors[ref_ID].y_pos[0])/len(colors[ref_ID].y_pos[0]) - offset_left) / line_slope)
-                    if color.x_pos[ID][-1] < left_boundary <= x:
-                        color.x_pos[ID] = []
-                        color.y_pos[ID] = []
+                    if last_known_value(color.x_pos[ID]) < left_boundary <= x:
+                        for k in range(len(color.x_pos[ID])):
+                            color.x_pos[ID][k] = None
+                            color.y_pos[ID][k] = None
 
                     right_boundary = int((sum(colors[ref_ID].y_pos[1])/len(colors[ref_ID].y_pos[1]) - offset_right) / line_slope)
                     if x >= right_boundary:
                         continue
 
-                tempx = color.x_pos[ID].copy()
-                tempy = color.y_pos[ID].copy()
-                tempx.append(int(x))
-                tempy.append(int(y))
-
-                color.x_pos[ID] = tempx.copy()
-                color.y_pos[ID] = tempy.copy()
+                color.x_pos[ID] = color.x_pos[ID] + [int(x)]
+                color.y_pos[ID] = color.y_pos[ID] + [int(y)]
 
             if ID == color.num_objects-1:
                 break
+
+        # fills in any holes to keep the array lengths in sync with the frame counts
+        for i in range(color.num_objects):
+            if len(color.x_pos[i]) < frame_count:
+                color.x_pos[i] = color.x_pos[i] + [None]
+                color.y_pos[i] = color.y_pos[i] + [None]
 
     for color in colors:
         for obj in range(color.num_objects):
