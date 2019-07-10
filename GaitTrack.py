@@ -97,7 +97,7 @@ def drawline(color1, id1, color2, id2, b=255, g=255, r=255, thickness=2):
 
 
 
-ref_I_D = 0
+ref_ID = 0
 
 # Color("G", (40, 40, 30), (101, 255, 255), 4)]
 
@@ -113,7 +113,7 @@ directory = r'C:\Users\amorrone\Google Drive\Colorado State\Research\Gait_Analys
 
 for file_name in os.listdir(directory):
 
-    file_name = '2-3_a_24.mp4'
+    # file_name = '2-3_a_24.mp4'
 
     colors = [Color("G", (50, 101, 56), (97, 255, 255), 2),
               Color("R", (159, 100, 51), (186, 255, 255), 4),
@@ -191,17 +191,15 @@ for file_name in os.listdir(directory):
             cnts.sort(key=lambda y_pos: cv2.moments(y_pos)['m01']/cv2.moments(y_pos)['m00'])
 
 
-            I_D = -1
-            if I_D >= 4:
-                pass
+            ID = -1
 
             for i in range(0, len(cnts)):
-                if I_D >= 4:
+                if ID >= 4:
                     pass
 
-                I_D = I_D + 1
+                ID = ID + 1
 
-                if I_D >= 4:
+                if ID >= 4:
                     pass
 
                 ((x, y), radius) = cv2.minEnclosingCircle(cnts[i])
@@ -215,7 +213,7 @@ for file_name in os.listdir(directory):
                 cv2.circle(frame, (int(x), int(y)), int(radius),
                            (255, 0, 0), 2)
 
-                correct_I_D = False
+                correct_ID = False
 
                 # tracks dots through discontinuity
 
@@ -224,52 +222,51 @@ for file_name in os.listdir(directory):
 
                 elif color.all_pos_established:
                     multiplier = 0
-                    while not correct_I_D and multiplier < 20:
-                        for j in range(I_D, color.num_objects):
-                            if I_D >= 4:
+                    while not correct_ID and multiplier < 20:
+                        for j in range(ID, color.num_objects):
+                            if ID >= 4:
                                 pass
                             minimum = min(m for m in color.y_pos[j] if m is not None)
                             low = minimum * (1 - multiplier*0.01)
                             maximum = max(m for m in color.y_pos[j] if m is not None)
                             high = maximum * (1 + multiplier*0.01)
                             if low <= y <= high:
-                                if I_D >= 4:
+                                if ID >= 4:
                                     pass
-                                I_D = j
-                                if I_D >= 4:
+                                ID = j
+                                if ID >= 4:
                                     pass
-                                correct_I_D = True
-                                if I_D >= 4:
+                                correct_ID = True
+                                if ID >= 4:
                                     pass
                                 break
-                        if I_D >= 4:
+                        if ID >= 4:
                             pass
                         multiplier = multiplier + 1
-                        if I_D > 3:
+
+                        if frame_count == 384:
                             pass
-                        if I_D == 4:
+                        if frame_count == 385:
                             pass
 
-
-
-
-
+                        if ID >= 4:
+                            ID = 3
 
                 if color.all_pos_established:
-                    cv2.putText(frame, color.label + str(I_D + 1), (int(x), int(y - radius)),
+                    cv2.putText(frame, color.label + str(ID + 1), (int(x), int(y - radius)),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
-                    if I_D >= 4:
+                    if ID >= 4:
                         pass
 
                     # hard coded green as marker color!
-                    if color.label != 'G' and len(colors[ref_I_D].x_pos[0]) and len(color.x_pos[I_D]):
+                    if color.label != 'G' and len(colors[ref_ID].x_pos[0]) and len(color.x_pos[ID]):
 
-                        x1 = int(sum(c for c in colors[ref_I_D].x_pos[0] if c is not None) / len(colors[ref_I_D].x_pos[0]))
-                        x2 = int(sum(c for c in colors[ref_I_D].x_pos[1] if c is not None) / len(colors[ref_I_D].x_pos[0]))
-                        y1 = int(sum(c for c in colors[ref_I_D].y_pos[0] if c is not None) / len(colors[ref_I_D].y_pos[0]))
-                        y2 = int(sum(c for c in colors[ref_I_D].y_pos[1] if c is not None) / len(colors[ref_I_D].y_pos[0]))
+                        x1 = int(sum(c for c in colors[ref_ID].x_pos[0] if c is not None) / len(colors[ref_ID].x_pos[0]))
+                        x2 = int(sum(c for c in colors[ref_ID].x_pos[1] if c is not None) / len(colors[ref_ID].x_pos[0]))
+                        y1 = int(sum(c for c in colors[ref_ID].y_pos[0] if c is not None) / len(colors[ref_ID].y_pos[0]))
+                        y2 = int(sum(c for c in colors[ref_ID].y_pos[1] if c is not None) / len(colors[ref_ID].y_pos[0]))
 
-                        if I_D >= 4:
+                        if ID >= 4:
                             pass
 
                         rise = y2 - y1
@@ -281,34 +278,34 @@ for file_name in os.listdir(directory):
                         offset_left = y1 - x1 * line_slope
                         offset_right = y2 - x2 * line_slope
 
-                        if I_D >= 4:
+                        if ID >= 4:
                             pass
 
-                        left_boundary = int((sum(c for c in colors[ref_I_D].y_pos[0] if c is not None)/len(colors[ref_I_D].y_pos[0]) - offset_left) / line_slope)
-                        last = last_known_value(color.x_pos[I_D])
+                        left_boundary = int((sum(c for c in colors[ref_ID].y_pos[0] if c is not None)/len(colors[ref_ID].y_pos[0]) - offset_left) / line_slope)
+                        last = last_known_value(color.x_pos[ID])
                         if last is not None and last < left_boundary <= x:
-                            for k in range(len(color.x_pos[I_D])):
-                                color.x_pos[I_D][k] = None
-                                color.y_pos[I_D][k] = None
-                            if I_D >= 4:
+                            for k in range(len(color.x_pos[ID])):
+                                color.x_pos[ID][k] = None
+                                color.y_pos[ID][k] = None
+                            if ID >= 4:
                                 pass
 
 
-                        right_boundary = int((sum(c for c in colors[ref_I_D].y_pos[1] if c is not None)/len(colors[ref_I_D].y_pos[1]) - offset_right) / line_slope)
+                        right_boundary = int((sum(c for c in colors[ref_ID].y_pos[1] if c is not None)/len(colors[ref_ID].y_pos[1]) - offset_right) / line_slope)
                         if x >= right_boundary:
                             continue
 
-                    if I_D >= 4:
+                    if ID >= 4:
                         pass
 
-                    # if len(color.y_pos[I_D]) < 50 or not color.all_pos_established or abs(int(y) - last_known_value(color.y_pos[I_D])) < 80:
-                    color.x_pos[I_D] = color.x_pos[I_D] + [int(x)]
-                    color.y_pos[I_D] = color.y_pos[I_D] + [int(y)]
+                    # if len(color.y_pos[ID]) < 50 or not color.all_pos_established or abs(int(y) - last_known_value(color.y_pos[ID])) < 80:
+                    color.x_pos[ID] = color.x_pos[ID] + [int(x)]
+                    color.y_pos[ID] = color.y_pos[ID] + [int(y)]
 
-                if I_D >= 4:
+                if ID >= 4:
                     pass
 
-                if I_D == color.num_objects-1:
+                if ID == color.num_objects-1:
                     break
 
             # fills in any holes to keep the array lengths in sync with the frame counts
@@ -336,10 +333,10 @@ for file_name in os.listdir(directory):
 
             # draws containing lines
 
-            # x1 = int(sum(colors[ref_I_D].x_pos[0])/len(colors[ref_I_D].x_pos[0]))
-            # x2 = int(sum(colors[ref_I_D].x_pos[1])/len(colors[ref_I_D].x_pos[0]))
-            # y1 = int(sum(colors[ref_I_D].y_pos[0])/len(colors[ref_I_D].y_pos[0]))
-            # y2 = int(sum(colors[ref_I_D].y_pos[1])/len(colors[ref_I_D].y_pos[0]))
+            # x1 = int(sum(colors[ref_ID].x_pos[0])/len(colors[ref_ID].x_pos[0]))
+            # x2 = int(sum(colors[ref_ID].x_pos[1])/len(colors[ref_ID].x_pos[0]))
+            # y1 = int(sum(colors[ref_ID].y_pos[0])/len(colors[ref_ID].y_pos[0]))
+            # y2 = int(sum(colors[ref_ID].y_pos[1])/len(colors[ref_ID].y_pos[0]))
             #
             # rise = y1 - y2
             # run = x1 - x2
@@ -357,7 +354,7 @@ for file_name in os.listdir(directory):
             # cv2.line(frame, (x1, y1), (x3, y3), (0, 0, 255), 2)
             # cv2.line(frame, (x2, y2), (x4, y4), (0, 0, 255), 2)
             #
-            # drawline(colors[ref_I_D], 0, colors[ref_I_D], 1, 0, 0, 255)
+            # drawline(colors[ref_ID], 0, colors[ref_ID], 1, 0, 0, 255)
 
             # cv2.line(frame, (int(sum(colors[1].x_pos[0])/len(colors[1].x_pos[0])), (int(sum(colors[1].y_pos[0])/len(colors[1].y_pos[0])))),
             #          (int(sum(colors[1].x_pos[0])/len(colors[1].x_pos[0])), int(sum(colors[1].y_pos[0])/len(colors[1].y_pos[0]))), (0, 0, 255), 2)
